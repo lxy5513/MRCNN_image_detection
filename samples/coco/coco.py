@@ -409,6 +409,15 @@ def evaluate_coco(model, dataset, coco, eval_type="bbox", limit=0, image_ids=Non
     # Pick COCO images from the dataset
     image_ids = image_ids or dataset.image_ids
 
+    img_source_path = '/home/ferryliu/data/Image'
+    filelist = os.listdir(img_source_path)
+    # sort file as it last mend time
+    filelist = sorted(filelist, key=lambda x: os.path.getmtime(os.path.join(img_source_path, x)), reverse=True)
+
+
+    if limit == 0:
+        limit = len(filelist)
+
     # Limit to a subset
     if limit:
         image_ids = image_ids[:limit]
@@ -420,13 +429,10 @@ def evaluate_coco(model, dataset, coco, eval_type="bbox", limit=0, image_ids=Non
     t_prediction = 0
     t_start = time.time()
 
-    img_source_path = '/home/ferryliu/data/Image'
-    filelist = os.listdir(img_source_path)
-    # sort file as it last mend time
-    filelist = sorted(filelist, key=lambda x: os.path.getmtime(os.path.join(img_source_path, x)), reverse=True)
+
     imgs_names = []
     for item in filelist:
-        if item.endswith('.jpg') or item.endswith('.jepg') or item.endswith('.png'):
+        if item.endswith('.jpg') or item.endswith('.jpeg') or item.endswith('.png'):
             src = os.path.join(os.path.abspath(img_source_path), item)
             imgs_names.append(src)
 
@@ -455,8 +461,8 @@ def evaluate_coco(model, dataset, coco, eval_type="bbox", limit=0, image_ids=Non
             # skimage.io.imsave(splash_path, splash)
 
 
-            visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'], dataset.class_names, r['scores'], show_bbox=False
-                                        , show_mask=False, title='Pred', save_path=classfication_filename)
+            visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'], dataset.class_names, r['scores'], show_bbox=True
+                                        , show_mask=False, title='分类', save_path=classfication_filename)
 
             # Run detection
             t = time.time()
@@ -475,6 +481,8 @@ def evaluate_coco(model, dataset, coco, eval_type="bbox", limit=0, image_ids=Non
                                                r["masks"].astype(np.uint8))
             # extend 使用一个序列扩展另一个list
             results.extend(image_results)
+            print('handle a photo')
+            consume_time()
         except:
             pass
 
@@ -524,9 +532,9 @@ if __name__ == '__main__':
                         help='Logs and checkpoints directory (default=logs/)')
     # -------------------------------------------------------------------------默认用500张图片来验证模型
     parser.add_argument('--limit', required=False,
-                        default=500,
+                        default=0,
                         metavar="<image count>",
-                        help='Images to use for evaluation (default=500)')
+                        help='Images to use for evaluation (default=0 但会显示所有图片)')
     parser.add_argument('--download', required=False,
                         default=False,
                         metavar="<True|False>",

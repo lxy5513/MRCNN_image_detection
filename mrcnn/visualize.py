@@ -138,9 +138,9 @@ def display_instances(image, boxes, masks, class_ids, class_names,
             continue
         y1, x1, y2, x2 = boxes[i]
         if show_bbox:
-            # patch 用于生成图形
-            p = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=4,
-                                alpha=0.7, linestyle="dashed",
+            # patch -------------------------------------------------------用于生成图形矩形
+            p = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=3,
+                                alpha=0.7, linestyle="-",
                                 edgecolor=color, facecolor='none')
             # 将图形添加到ax
             ax.add_patch(p)
@@ -163,7 +163,17 @@ def display_instances(image, boxes, masks, class_ids, class_names,
         else:
             caption = captions[i]
         ax.text(x1, y1 + 8, caption,
-                color=color, size=30, backgroundcolor="none")
+                color='w', size=30, backgroundcolor='None')
+        width = 30
+        length = 30*len(caption)
+        if y1+8-35 < 0:
+            y1 = 35
+            width = 5
+            length = length/2
+        # print('--------------', length, '---------------------', width, '----------------', (x1, y1+8-35), '-------------------' + caption + '--------------------')
+        text_bg = patches.Rectangle((x1, y1+8-35), length, width+10, linewidth=2, edgecolor='None', facecolor=color, alpha=0.45)
+        ax.add_patch(text_bg)
+
 
         # Mask
         mask = masks[:, :, i]
@@ -172,7 +182,7 @@ def display_instances(image, boxes, masks, class_ids, class_names,
         # print(mask_len)
 
         # ------------------------------------------------------------------------------add mask or not
-        show_mask = True
+        # show_mask = True
         if show_mask:
             masked_image = apply_mask(masked_image, mask, color)
 
@@ -181,13 +191,22 @@ def display_instances(image, boxes, masks, class_ids, class_names,
         padded_mask = np.zeros(
             (mask.shape[0] + 2, mask.shape[1] + 2), dtype=np.uint8)
         padded_mask[1:-1, 1:-1] = mask
-        # 轮廓
-        contours = find_contours(padded_mask, 0.5)
-        for verts in contours:
-            # Subtract the padding and flip (y, x) to (x, y)
-            verts = np.fliplr(verts) - 1
-            p = Polygon(verts, facecolor="none", edgecolor=color)
-            ax.add_patch(p)
+
+
+        # p = patches.Rectangle((rx1, ry1), rx2 - rx1, ry2 - ry1, linewidth=2,
+        #                           edgecolor=color, facecolor='none')
+        # ax.add_patch(p)
+        #
+
+
+        # # 轮廓 ----------以下操作是为了画出识别的轮廓的
+        # contours = find_contours(padded_mask, 0.5)
+        # for verts in contours:
+        #     # Subtract the padding and flip (y, x) to (x, y)
+        #     verts = np.fliplr(verts) - 1
+        #     # alpha 表示透明度　　
+        #     p = Polygon(verts,alpha=0.2,facecolor=color, edgecolor='None', linewidth=5)
+        #     ax.add_patch(p)
 
 
 
@@ -195,6 +214,7 @@ def display_instances(image, boxes, masks, class_ids, class_names,
     # if save_path:
     #     from skimage import io
     #     io.imsave(save_path, masked_image)
+
 
 
     ax.imshow(masked_image.astype(np.uint8))
