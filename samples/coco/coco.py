@@ -117,6 +117,13 @@ class CocoConfig(Config):
     # Number of classes (including background)
     NUM_CLASSES = 1 + 80  # COCO has 80 classes
 
+    # －－－－－－－－－－－－－－－－－－－－－在这里直接限制输出的准确率比例
+    DETECTION_MIN_CONFIDENCE = 0.99
+
+    # -------------------------------
+    DETECTION_MAX_INSTANCES = 10
+
+
 
 ############################################################
 #  Dataset
