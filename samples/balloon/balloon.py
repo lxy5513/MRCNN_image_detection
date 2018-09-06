@@ -189,10 +189,11 @@ def train(model):
                 learning_rate=config.LEARNING_RATE,
                 epochs=30,
                 layers='heads')
-# --------------------------------------------------------------------------------------------- 重新训练
+# --------------------------------------------------------------------------------------------- 重新训练 train head layer
 
 def color_splash(image, mask):
-    """Apply color splash effect.
+    """
+    Apply color splash effect.
     image: RGB image [height, width, 3]
     mask: instance segmentation mask [height, width, instance count]
 
