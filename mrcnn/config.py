@@ -90,7 +90,7 @@ class Config(object):
     # How many anchors per image to use for RPN training
     RPN_TRAIN_ANCHORS_PER_IMAGE = 256
 
-    # ROIs kept after non-maximum suppression (training and inference)
+    # ---------------------------------------ROIs kept after non-maximum suppression (training and inference)
     POST_NMS_ROIS_TRAINING = 2000
     POST_NMS_ROIS_INFERENCE = 1000
 
@@ -161,7 +161,7 @@ class Config(object):
     RPN_BBOX_STD_DEV = np.array([0.1, 0.1, 0.2, 0.2])
     BBOX_STD_DEV = np.array([0.1, 0.1, 0.2, 0.2])
 
-    # Max number of final detections
+    # Max number of final detections---------------------------------------------------------------------------------
     DETECTION_MAX_INSTANCES = 100
 
     # Minimum probability value to accept a detected instance
