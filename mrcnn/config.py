@@ -44,13 +44,13 @@ class Config(object):
     VALIDATION_STEPS = 50
 
     # RESNET 使用了一种叫做shortcut connection连接方式 叫做深度残差网络 可以解决 随着
-    # 网络加深 准确率不下降的 问题    比VGG16更好用  need 12G memory GPU
+    # ------------------------------------------网络加深 准确率不下降的 问题    比VGG16更好用  need 12G memory GPU
     # Backbone network architecture
     # Supported values are: resnet50, resnet101.
     # You can also provide a callable that should have the signature
     # of model.resnet_graph. If you do so, you need to supply a callable
     # to COMPUTE_BACKBONE_SHAPE as well
-    # resnet 101指的是卷积层和全连接层加起来是101层
+    # resnet ------------------------------------------------------------------101指的是卷积层和全连接层加起来是101层
     BACKBONE = "resnet101"
 
     # Only useful if you supply a callable to BACKBONE. Should compute
@@ -59,22 +59,23 @@ class Config(object):
     COMPUTE_BACKBONE_SHAPE = None
 
     # The strides of each layer of the FPN Pyramid. -------------------------------- feature pyramid network
+    # 通过多层金字塔来融合多层特征
     # These values are based on a Resnet101 backbone.
     BACKBONE_STRIDES = [4, 8, 16, 32, 64]
 
     # Size of the fully-connected layers in the classification graph
     FPN_CLASSIF_FC_LAYERS_SIZE = 1024
 
-    # Size of the top-down layers used to build the feature pyramid
+    # Size of the top-down layers used to build the feature pyramid-------------------------
     TOP_DOWN_PYRAMID_SIZE = 256
 
     # Number of classification classes (including background)
     NUM_CLASSES = 1  # -------------------------------------------------Override in sub-classes
 
-    # Length of square anchor side in pixels---------------???????
+    # Length of square anchor side in pixels---------------??????候选框的长度，为啥是5个?
     RPN_ANCHOR_SCALES = (32, 64, 128, 256, 512)
 
-    # Ratios of anchors at each cell (width/height)  比率
+    # Ratios of anchors at each cell (width/height)  比率----------------------------
     # A value of 1 represents a square anchor, and 0.5 is a wide anchor
     RPN_ANCHOR_RATIOS = [0.5, 1, 2]
 
@@ -83,7 +84,7 @@ class Config(object):
     # If 2, then anchors are created for every other cell, and so on.
     RPN_ANCHOR_STRIDE = 1
 
-    # Non-max suppression threshold to filter RPN proposals.  ---------------the rate of filter proposal
+    # Non-max suppression threshold to filter RPN proposals.  -------------将样本重叠率大于0.7标为前景
     # You can increase this during training to generate more propsals.
     RPN_NMS_THRESHOLD = 0.7
 
@@ -94,7 +95,7 @@ class Config(object):
     POST_NMS_ROIS_TRAINING = 2000
     POST_NMS_ROIS_INFERENCE = 1000
 
-    # If enabled, resizes instance masks to a smaller size to reduce----------------------------
+    # If enabled, resizes instance masks to a smaller size to reduce----------------------------减小内存加载的（处理高清图片时建议使用
     # memory load. Recommended when using high-resolution images.
     USE_MINI_MASK = True
     MINI_MASK_SHAPE = (56, 56)  # (height, width) of the mini-mask
@@ -216,7 +217,7 @@ class Config(object):
 
         # Input image size    规定输出图片的大小 一定是正方形
         if self.IMAGE_RESIZE_MODE == "crop":
-            # 3 repre what ????
+            # 3 repre what channel
             self.IMAGE_SHAPE = np.array([self.IMAGE_MIN_DIM, self.IMAGE_MIN_DIM, 3])
         else:
             self.IMAGE_SHAPE = np.array([self.IMAGE_MAX_DIM, self.IMAGE_MAX_DIM, 3])

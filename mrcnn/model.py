@@ -214,10 +214,12 @@ def resnet_graph(input_image, architecture, stage5=False, train_bn=True):
 
 ############################################################
 #  Proposal Layer
+# 候选框anchor的提取，在低分辨率的特征图上
 ############################################################
 
 def apply_box_deltas_graph(boxes, deltas):
-    """Applies the given deltas to the given boxes.
+    """
+    Applies the given deltas to the given boxes.
     boxes: [N, (y1, x1, y2, x2)] boxes to update
     deltas: [N, (dy, dx, log(dh), log(dw))] refinements to apply
     """
@@ -261,7 +263,8 @@ def clip_boxes_graph(boxes, window):
 
 
 class ProposalLayer(KE.Layer):
-    """Receives anchor scores and selects a subset to pass as proposals
+    """
+    Receives anchor scores and selects a subset to pass as proposals
     to the second stage. Filtering is done based on anchor scores and
     non-max suppression to remove overlaps. It also applies bounding
     box refinement deltas to anchors.
@@ -342,6 +345,7 @@ class ProposalLayer(KE.Layer):
 
 ############################################################
 #  ROIAlign Layer
+# replace the Roi Pooling layer
 ############################################################
 
 def log2_graph(x):
@@ -350,7 +354,7 @@ def log2_graph(x):
 
 
 class PyramidROIAlign(KE.Layer):
-    """Implements ROI Pooling on multiple levels of the feature pyramid.
+    """Implements ROI Pooling on multiple levels of the feature pyramid.------------------------------------------------
 
     Params:
     - pool_shape: [height, width] of the output pooled regions. Usually [7, 7]
@@ -462,7 +466,8 @@ class PyramidROIAlign(KE.Layer):
 ############################################################
 
 def overlaps_graph(boxes1, boxes2):
-    """Computes IoU overlaps between two sets of boxes.
+    """
+    Computes IoU overlaps between two sets of boxes.
     boxes1, boxes2: [N, (y1, x1, y2, x2)].
     """
     # 1. Tile boxes2 and repeat boxes1. This allows us to compare
@@ -629,7 +634,8 @@ def detection_targets_graph(proposals, gt_class_ids, gt_boxes, gt_masks, config)
 
 
 class DetectionTargetLayer(KE.Layer):
-    """Subsamples proposals and generates target box refinement, class_ids,
+    """
+    Subsamples proposals and generates target box refinement, class_ids,
     and masks for each.
 
     Inputs:
