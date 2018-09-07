@@ -455,7 +455,7 @@ def evaluate_coco(model, dataset, coco, eval_type="bbox", limit=0, image_ids=Non
 
 
             # after image load, move old file to Image_OLD/
-            shutil.move(image_scr_name, img_transfer_path + os.path.basename(image_scr_name))
+            # shutil.move(image_scr_name, img_transfer_path + os.path.basename(image_scr_name))
 
 
             classfication_path = '/home/ferryliu/data/Cla_image/'

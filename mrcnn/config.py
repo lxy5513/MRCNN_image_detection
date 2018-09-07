@@ -166,8 +166,8 @@ class Config(object):
     DETECTION_MAX_INSTANCES = 100
 
     # Minimum probability value to accept a detected instance
-    # ROIs below this threshold are skipped
-    DETECTION_MIN_CONFIDENCE = 0.7
+    # ROIs below this threshold are skipped-----------------------------------想提升准确率就更改它　加大
+    DETECTION_MIN_CONFIDENCE = 0.9
 
     # Non-maximum suppression threshold for detection
     DETECTION_NMS_THRESHOLD = 0.3
