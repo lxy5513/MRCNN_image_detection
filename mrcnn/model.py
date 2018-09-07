@@ -716,7 +716,11 @@ def refine_detections_graph(rois, probs, deltas, window, config):
     # Class IDs per ROI
     class_ids = tf.argmax(probs, axis=1, output_type=tf.int32)
     # Class probability of the top class of each ROI
+    # tf.stack其作用类似于tf.concat，都是拼接两个张量，而不同之处在于，tf.concat拼接的是两个shape完全相同的张量，
+    # 并且产生的张量的阶数不会发生变化，而tf.stack则会在新的张量阶上拼接，产生的张量的阶数将会增加
     indices = tf.stack([tf.range(probs.shape[0]), class_ids], axis=1)
+    # tf.gather_nd(params, indices, name=None) {#gather_nd}
+    # 用indices从张量params得到新张量 (indices 表示选取的位置)
     class_scores = tf.gather_nd(probs, indices)
     # Class-specific bounding box deltas
     deltas_specific = tf.gather_nd(deltas, indices)
@@ -740,6 +744,7 @@ def refine_detections_graph(rois, probs, deltas, window, config):
 
     # Apply per-class NMS
     # 1. Prepare variables
+    # tf.gather 适合获取一维数据,keep是位置
     pre_nms_class_ids = tf.gather(class_ids, keep)
     pre_nms_scores = tf.gather(class_scores, keep)
     pre_nms_rois = tf.gather(refined_rois,   keep)
