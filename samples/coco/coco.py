@@ -415,7 +415,7 @@ def evaluate_coco(model, dataset, coco, eval_type="bbox", limit=0, image_ids=Non
     """
     # Pick COCO images from the dataset
     image_ids = image_ids or dataset.image_ids
-
+    img_transfer_path = '/home/ferryliu/data/Image_OLD/'
     img_source_path = '/home/ferryliu/data/Image'
     filelist = os.listdir(img_source_path)
     # sort file as it last mend time
@@ -454,6 +454,10 @@ def evaluate_coco(model, dataset, coco, eval_type="bbox", limit=0, image_ids=Non
             image = dataset.load_image(image_scr_name)
 
 
+            # after image load, move old file to Image_OLD/
+            shutil.move(image_scr_name, img_transfer_path + os.path.basename(image_scr_name))
+
+
             classfication_path = '/home/ferryliu/data/Cla_image/'
             if not os.path.exists(classfication_path):
                 os.mkdir(classfication_path)
@@ -463,9 +467,6 @@ def evaluate_coco(model, dataset, coco, eval_type="bbox", limit=0, image_ids=Non
 
             r = model.detect([image], verbose=0)[0]
             # r--------------------------dict_keys(['masks', 'rois', 'class_ids', 'scores'])
-            # splash = color_splash(image, r['masks'])
-            # skimage.io.imsave(origin_path, image)
-            # skimage.io.imsave(splash_path, splash)
 
 
             visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'], dataset.class_names, r['scores'], show_bbox=True
@@ -503,7 +504,6 @@ def evaluate_coco(model, dataset, coco, eval_type="bbox", limit=0, image_ids=Non
     # cocoEval.evaluate()
     # cocoEval.accumulate()
     # cocoEval.summarize()
-
     print("Prediction time: {}. Average {}/image".format(
         t_prediction, t_prediction / len(image_ids)))
     print("Total time: ", time.time() - t_start)
