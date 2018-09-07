@@ -414,42 +414,63 @@ def evaluate_coco(model, dataset, coco, eval_type="bbox", limit=0, image_ids=Non
     limit: if not 0, it's the number of images to use for evaluation -----------------检测几条数据
     """
     # Pick COCO images from the dataset
-    image_ids = image_ids or dataset.image_ids
+    # image_ids = image_ids or dataset.image_ids
     img_transfer_path = '/home/ferryliu/data/Image_OLD/'
     img_source_path = '/home/ferryliu/data/Image'
     filelist = os.listdir(img_source_path)
     # sort file as it last mend time
     filelist = sorted(filelist, key=lambda x: os.path.getmtime(os.path.join(img_source_path, x)), reverse=True)
 
-
-    if limit == 0:
-        limit = len(filelist)
-
-    # Limit to a subset
-    if limit:
-        image_ids = image_ids[:limit]
-    # pdb.set_trace()
-
-    # Get corresponding COCO image IDs.
-    coco_image_ids = [dataset.image_info[id]["id"] for id in image_ids]
-
     t_prediction = 0
     t_start = time.time()
 
-
+    # full name of all input iamges
     imgs_names = []
     for item in filelist:
         if item.endswith('.jpg') or item.endswith('.jpeg') or item.endswith('.png'):
             src = os.path.join(os.path.abspath(img_source_path), item)
             imgs_names.append(src)
 
+    if limit == 0 or limit > len(imgs_names):
+        limit = len(imgs_names)
 
-    results = []
+    print('------------------------------------------The programe total evaluate {} iamges'.format(limit))
+    # results = []
     consume_time()
-    for i, image_id in enumerate(image_ids):
+    image_num = 0
+    while image_num < limit:
         # Load image
         try:
             #  -----------------------------------------------------找到要分类的图片---------------------------------------
+            imgs_per_epoch = config.BATCH_SIZE
+            images = []
+            for i in range(imgs_per_epoch):
+                image_scr_name = imgs_names[i+image_num]
+                image = dataset.load_image(image_scr_name)
+                images.append(image)
+
+            # handle results, output a list
+            res = model.detect(images, verbose=0)
+
+            for num in range(len(res)):
+                r = res[i]
+                image = images[i]
+                classfication_path = '/home/ferryliu/data/Cla_image/'
+                if not os.path.exists(classfication_path):
+                    os.mkdir(classfication_path)
+
+                classfication_filename = classfication_path + os.path.basename(imgs_names[image_num + num])
+                visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'], dataset.class_names,
+                                            r['scores'], show_bbox=True
+                                            , show_mask=False, title='分类', save_path=classfication_filename)
+
+                print('=============================The file name of evaluation is {}'.format(os.path.basename(imgs_names[image_num + num])))
+                consume_time()
+
+            image_num = image_num + imgs_per_epoch
+
+            '''
+            
             image_scr_name = imgs_names[i]
             image = dataset.load_image(image_scr_name)
 
@@ -489,20 +510,12 @@ def evaluate_coco(model, dataset, coco, eval_type="bbox", limit=0, image_ids=Non
             # extend 使用一个序列扩展另一个list
             results.extend(image_results)
             print('handle a photo')
-            consume_time()
+            '''
         except:
-            pass
+            image_num = image_num + 1
 
-    # Load results. This modifies results with additional attributes.
-    # appear the error of unicode is not defined --------------------------------
-    coco_results = coco.loadRes(results)
+        print('img num', image_num, '-----limit ', limit)
 
-    # Evaluate
-    # cocoEval = COCOeval(coco, coco_results, eval_type)
-    # cocoEval.params.imgIds = coco_image_ids
-    # cocoEval.evaluate()
-    # cocoEval.accumulate()
-    # cocoEval.summarize()
     print("Prediction time: {}. Average {}/image".format(
         t_prediction, t_prediction / len(image_ids)))
     print("Total time: ", time.time() - t_start)
@@ -564,7 +577,7 @@ if __name__ == '__main__':
             # Set batch size to 1 since we'll be running inference on
             # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
             GPU_COUNT = 1
-            IMAGES_PER_GPU = 2
+            IMAGES_PER_GPU = 1
             # ===========================================================================预测时候的配置－－－－－－－－－－－－－－－
             DETECTION_MIN_CONFIDENCE = 0.9
         config = InferenceConfig()
