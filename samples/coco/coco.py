@@ -108,7 +108,7 @@ class CocoConfig(Config):
     NAME = "coco"
 
     # We use a GPU with 12GB memory, which can fit two images.
-    # Adjust down if you use a smaller GPU.
+    # Adjust down if you use a smaller GPU.---------------------------------------only used for train status
     IMAGES_PER_GPU = 2
 
     # Uncomment to train on 8 GPUs (default is 1)
@@ -453,7 +453,6 @@ def evaluate_coco(model, dataset, coco, eval_type="bbox", limit=0, image_ids=Non
             image_scr_name = imgs_names[i]
             image = dataset.load_image(image_scr_name)
 
-
             # after image load, move old file to Image_OLD/
             # shutil.move(image_scr_name, img_transfer_path + os.path.basename(image_scr_name))
 
@@ -462,9 +461,9 @@ def evaluate_coco(model, dataset, coco, eval_type="bbox", limit=0, image_ids=Non
             if not os.path.exists(classfication_path):
                 os.mkdir(classfication_path)
 
-
             classfication_filename = classfication_path + os.path.basename(image_scr_name)
 
+            # -----------------------------------------如果多GPU BATCH>1 则len(iame)>1 否则会报错－－－－－－－－－－－－－－
             r = model.detect([image], verbose=0)[0]
             # r--------------------------dict_keys(['masks', 'rois', 'class_ids', 'scores'])
 
@@ -565,8 +564,9 @@ if __name__ == '__main__':
             # Set batch size to 1 since we'll be running inference on
             # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
             GPU_COUNT = 1
-            IMAGES_PER_GPU = 1
-            DETECTION_MIN_CONFIDENCE = 0
+            IMAGES_PER_GPU = 2
+            # ===========================================================================预测时候的配置－－－－－－－－－－－－－－－
+            DETECTION_MIN_CONFIDENCE = 0.9
         config = InferenceConfig()
     config.display()
 
@@ -644,7 +644,6 @@ if __name__ == '__main__':
 
     elif args.command == "evaluate":
         # Validation dataset
-
         dataset_val = CocoDataset()
         val_type = "val" if args.year in '2017' else "minival"
         coco = dataset_val.load_coco(args.dataset, val_type, year=args.year, return_coco=True, auto_download=args.download)

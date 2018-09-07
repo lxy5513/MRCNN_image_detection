@@ -737,7 +737,8 @@ def refine_detections_graph(rois, probs, deltas, window, config):
     keep = tf.where(class_ids > 0)[:, 0]
     # Filter out low confidence boxes
     # import pdb;pdb.set_trace()
-    config.DETECTION_MIN_CONFIDENCE = 0.9
+    # -----------------------------------------------------------------------------------------------------------------选取前景区域的概率
+    # config.DETECTION_MIN_CONFIDENCE = 0.9
     if config.DETECTION_MIN_CONFIDENCE:
         conf_keep = tf.where(class_scores >= config.DETECTION_MIN_CONFIDENCE)[:, 0]
         keep = tf.sets.set_intersection(tf.expand_dims(keep, 0),
@@ -2532,6 +2533,8 @@ class MaskRCNN():
         masks: [H, W, N] instance binary masks
         """
         assert self.mode == "inference", "Create model in inference mode."
+        # import pdb;pdb.set_trace()
+        # ================================================================================想要一次预测多个图片这里会有问题－－－－－
         assert len(
             images) == self.config.BATCH_SIZE, "len(images) must be equal to BATCH_SIZE"
 
