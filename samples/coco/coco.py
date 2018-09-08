@@ -51,7 +51,7 @@ from pycocotools import mask as maskUtils
 import zipfile
 import urllib.request
 import shutil
-
+from timeout import timeout
 start_time = time.time()
 
 import matplotlib.pyplot as plt
@@ -406,6 +406,7 @@ def build_coco_results(dataset, image_ids, rois, class_ids, scores, masks):
     return results
 
 # ------------------------------------------------------------------------------------查看效果
+@timeout(60)
 def evaluate_coco(model, dataset, coco, eval_type="bbox", limit=0, image_ids=None):
     """
     Runs official COCO evaluation.
@@ -413,8 +414,8 @@ def evaluate_coco(model, dataset, coco, eval_type="bbox", limit=0, image_ids=Non
     eval_type: "bbox" or "segm" for bounding box or segmentation evaluation
     limit: if not 0, it's the number of images to use for evaluation -----------------检测几条数据
     """
-    # Pick COCO images from the dataset
-    # image_ids = image_ids or dataset.image_ids
+
+
     img_transfer_path = '/home/ferryliu/data/Image_OLD/'
     img_source_path = '/home/ferryliu/data/Image'
     filelist = os.listdir(img_source_path)
@@ -465,52 +466,13 @@ def evaluate_coco(model, dataset, coco, eval_type="bbox", limit=0, image_ids=Non
                                             , show_mask=False, title='分类', save_path=classfication_filename)
 
                 print('=============================The file name of evaluation is {}'.format(os.path.basename(imgs_names[image_num + num])))
+
+                # after image load, move old file to Image_OLD/
+                # shutil.move(image_scr_name, img_transfer_path + os.path.basename(image_scr_name))
                 consume_time()
 
             image_num = image_num + imgs_per_epoch
 
-            '''
-            
-            image_scr_name = imgs_names[i]
-            image = dataset.load_image(image_scr_name)
-
-            # after image load, move old file to Image_OLD/
-            # shutil.move(image_scr_name, img_transfer_path + os.path.basename(image_scr_name))
-
-
-            classfication_path = '/home/ferryliu/data/Cla_image/'
-            if not os.path.exists(classfication_path):
-                os.mkdir(classfication_path)
-
-            classfication_filename = classfication_path + os.path.basename(image_scr_name)
-
-            # -----------------------------------------如果多GPU BATCH>1 则len(iame)>1 否则会报错－－－－－－－－－－－－－－
-            r = model.detect([image], verbose=0)[0]
-            # r--------------------------dict_keys(['masks', 'rois', 'class_ids', 'scores'])
-
-
-            visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'], dataset.class_names, r['scores'], show_bbox=True
-                                        , show_mask=False, title='分类', save_path=classfication_filename)
-
-            # Run detection
-            t = time.time()
-            # r=result预测结果 is a list, every item in it is a dictionary
-            r = model.detect([image], verbose=0)[0]
-            # ------------------------------------------detectd image, but how to show it
-
-            t_prediction += (time.time() - t)
-
-
-            # Convert results to COCO format
-            # Cast masks to uint8 because COCO tools errors out on bool
-            image_results = build_coco_results(dataset, coco_image_ids[i:i + 1],
-                                               r["rois"], r["class_ids"],
-                                               r["scores"],
-                                               r["masks"].astype(np.uint8))
-            # extend 使用一个序列扩展另一个list
-            results.extend(image_results)
-            print('handle a photo')
-            '''
         except:
             image_num = image_num + 1
 
@@ -662,6 +624,7 @@ if __name__ == '__main__':
         coco = dataset_val.load_coco(args.dataset, val_type, year=args.year, return_coco=True, auto_download=args.download)
         dataset_val.prepare()
         print("Running COCO evaluation on {} images.".format(args.limit))
+
         evaluate_coco(model, dataset_val, coco, "bbox", limit=int(args.limit))
     else:
         print("'{}' is not recognized. "
