@@ -37,6 +37,10 @@ import sys
 mrcnn_path = '/home/ferryliu/code/image_detection'
 sys.path.append(mrcnn_path)
 from mrcnn import visualize
+post_path = '/home/ferryliu/data'
+sys.path.append(post_path)
+from image_post import post_fun
+
 
 # Download and install the Python COCO tools from https://github.com/waleedka/coco
 # That's a fork from the original https://github.com/pdollar/coco with a bug
@@ -406,7 +410,7 @@ def build_coco_results(dataset, image_ids, rois, class_ids, scores, masks):
     return results
 
 # ------------------------------------------------------------------------------------查看效果
-@timeout(60)
+# @timeout(20)
 def evaluate_coco(model, dataset, coco, eval_type="bbox", limit=0, image_ids=None):
     """
     Runs official COCO evaluation.
@@ -414,73 +418,95 @@ def evaluate_coco(model, dataset, coco, eval_type="bbox", limit=0, image_ids=Non
     eval_type: "bbox" or "segm" for bounding box or segmentation evaluation
     limit: if not 0, it's the number of images to use for evaluation -----------------检测几条数据
     """
+    loop = 0
+    post_time = 0
+    detection_num = 0
+    while True:
+        # pdb.set_trace()
+        img_transfer_path = '/home/ferryliu/data/Image_OLD/'
+        img_source_path = '/home/ferryliu/data/Image'
+        filelist = os.listdir(img_source_path)
+        # sort file as it last mend time
+        filelist = sorted(filelist, key=lambda x: os.path.getmtime(os.path.join(img_source_path, x)), reverse=True)
+
+        t_prediction = 0
+        t_start = time.time()
+
+        # full name of all input iamges
+        imgs_names = []
+        for item in filelist:
+            if item.endswith('.jpg') or item.endswith('.jpeg') or item.endswith('.png'):
+                src = os.path.join(os.path.abspath(img_source_path), item)
+                imgs_names.append(src)
+
+        if limit == 0 or limit > len(imgs_names):
+            limit = len(imgs_names)
+
+        # print('------------------------------------------The programe this time evaluates {} iamges'.format(limit))
+        # results = []
+        # consume_time()
+        image_num = 0
+        while image_num < limit:
+            # Load image
+            try:
+                #  -----------------------------------------------------找到要分类的图片---------------------------------------
+                imgs_per_epoch = config.BATCH_SIZE
+                images = []
+                for i in range(imgs_per_epoch):
+                    image_scr_name = imgs_names[i+image_num]
+                    image = dataset.load_image(image_scr_name)
+                    images.append(image)
+
+                # handle results, output a list
+                res = model.detect(images, verbose=0)
+
+                for num in range(len(res)):
+                    r = res[i]
+                    # image = images[i]
+
+                    length_, width_ = image.shape[:2]
+                    classfication_path = '/home/ferryliu/data/Cls_image/'
+                    if not os.path.exists(classfication_path):
+                        os.mkdir(classfication_path)
+
+                    figsize = (length_, width_)
+                    classfication_filename = classfication_path + os.path.basename(imgs_names[image_num + num])
+                    visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'], dataset.class_names,
+                                                r['scores'], show_bbox=True
+                                                , show_mask=False, title='DSD 图片识别', save_path=classfication_filename)
+
+                    print('=============================The file name of evaluation is {}'.format(os.path.basename(imgs_names[image_num + num])))
+
+                    # after image load, move old file to Image_OLD
+                    detection_num += 1
+                    # time.sleep(0.2)
+                    shutil.move(image_scr_name, img_transfer_path + os.path.basename(image_scr_name).split('.')[0] + '.jpg')
 
 
-    img_transfer_path = '/home/ferryliu/data/Image_OLD/'
-    img_source_path = '/home/ferryliu/data/Image'
-    filelist = os.listdir(img_source_path)
-    # sort file as it last mend time
-    filelist = sorted(filelist, key=lambda x: os.path.getmtime(os.path.join(img_source_path, x)), reverse=True)
+                image_num = image_num + imgs_per_epoch
 
-    t_prediction = 0
-    t_start = time.time()
+                time.sleep(0.1)
+                post_time = post_fun(post_time)
+                print('post time ', post_time)
 
-    # full name of all input iamges
-    imgs_names = []
-    for item in filelist:
-        if item.endswith('.jpg') or item.endswith('.jpeg') or item.endswith('.png'):
-            src = os.path.join(os.path.abspath(img_source_path), item)
-            imgs_names.append(src)
 
-    if limit == 0 or limit > len(imgs_names):
-        limit = len(imgs_names)
 
-    print('------------------------------------------The programe total evaluate {} iamges'.format(limit))
-    # results = []
-    consume_time()
-    image_num = 0
-    while image_num < limit:
-        # Load image
-        try:
-            #  -----------------------------------------------------找到要分类的图片---------------------------------------
-            imgs_per_epoch = config.BATCH_SIZE
-            images = []
-            for i in range(imgs_per_epoch):
-                image_scr_name = imgs_names[i+image_num]
-                image = dataset.load_image(image_scr_name)
-                images.append(image)
+            except:
+                image_num = image_num + 1
+                print('exception no file')
+                info = sys.exc_info()
+                print(info[0], info[1])
+                print('POST error')
+                # exit()
 
-            # handle results, output a list
-            res = model.detect(images, verbose=0)
+            print('img num', image_num, '-----limit ', limit)
+        if loop%100 == 0:
+            consume_time()
+            print('一次循环结束 这是第{}次循环, 已经识别{}张图片 post succeess 次数 {}'.format(loop, detection_num, post_time))
+        time.sleep(0.1)
+        loop += 1
 
-            for num in range(len(res)):
-                r = res[i]
-                image = images[i]
-                classfication_path = '/home/ferryliu/data/Cla_image/'
-                if not os.path.exists(classfication_path):
-                    os.mkdir(classfication_path)
 
-                classfication_filename = classfication_path + os.path.basename(imgs_names[image_num + num])
-                visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'], dataset.class_names,
-                                            r['scores'], show_bbox=True
-                                            , show_mask=False, title='分类', save_path=classfication_filename)
-
-                print('=============================The file name of evaluation is {}'.format(os.path.basename(imgs_names[image_num + num])))
-
-                # after image load, move old file to Image_OLD/
-                # shutil.move(image_scr_name, img_transfer_path + os.path.basename(image_scr_name))
-                consume_time()
-
-            image_num = image_num + imgs_per_epoch
-
-        except:
-            image_num = image_num + 1
-
-        print('img num', image_num, '-----limit ', limit)
-
-    print("Prediction time: {}. Average {}/image".format(
-        t_prediction, t_prediction / len(image_ids)))
-    print("Total time: ", time.time() - t_start)
 
 
 ############################################################
@@ -541,7 +567,7 @@ if __name__ == '__main__':
             GPU_COUNT = 1
             IMAGES_PER_GPU = 1
             # ===========================================================================预测时候的配置－－－－－－－－－－－－－－－
-            DETECTION_MIN_CONFIDENCE = 0.9
+            DETECTION_MIN_CONFIDENCE = 0.8
         config = InferenceConfig()
     config.display()
 

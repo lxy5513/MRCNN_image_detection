@@ -107,14 +107,38 @@ def display_instances(image, boxes, masks, class_ids, class_names,
     N = boxes.shape[0]
     if not N:
         print("\n*** No instances to display 未找到要分类的照片 *** \n")
+        return
     else:
         # ------------------------------------------------------------first comment next line
         assert boxes.shape[0] == masks.shape[-1] == class_ids.shape[0]
 
+    text_size = 10
+    if N < 5:
+        text_size = 30
+    if N > 12:
+        text_size = 22
+
     # If no axis is passed, create one and automatically call show()
     auto_show = False
+
+    leng, wid = image.shape[:2]
+    figsize = (leng, wid)
+
     if not ax:
-        _, ax = plt.subplots(1, figsize=figsize)
+        # _, ax = plt.subplots(1, figsize=figsize)
+        _, ax = plt.subplots(1)
+
+
+        # ------------------------------------------------------------原图形状展示
+        dpi = 80
+        height_,width_ = image.shape[:2]
+        figsize = width_/float(dpi), height_/float(dpi)
+        print('figsize ',figsize )
+        fig = plt.figure(figsize=figsize)
+        ax = fig.add_axes([0,0,1,1])
+
+
+        # ax = plt.figure()
         auto_show = True
 
     # Generate random colors
@@ -122,10 +146,10 @@ def display_instances(image, boxes, masks, class_ids, class_names,
 
     # Show area outside image boundaries.
     height, width = image.shape[:2]
-    ax.set_ylim(height + 10, -10)
-    ax.set_xlim(-10, width + 10)
+    # ax.set_ylim(height + 10, -10)
+    # ax.set_xlim(-10, width + 10)
     ax.axis('off')
-    ax.set_title(title)
+    # ax.set_title(title,color='w',fontsize=30, bbox=dict(facecolor='r', edgecolor='r', alpha=0.5))
 
     masked_image = image.astype(np.uint32).copy()
     # ---------------------------------------------分别画每一个----------------
@@ -139,40 +163,34 @@ def display_instances(image, boxes, masks, class_ids, class_names,
         y1, x1, y2, x2 = boxes[i]
         if show_bbox:
             # patch -------------------------------------------------------用于生成图形矩形
-            p = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=3,
+            p = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=2,
                                 alpha=0.7, linestyle="-",
-                                edgecolor=color, facecolor='none')
+                                edgecolor="#fff100", facecolor='none')
             # 将图形添加到ax
             ax.add_patch(p)
         # 将分类列表转化为中文
         class_names=[' BG ', ' 人 ', ' 自行车 ', ' 汽车 ', ' 摩托车 ', ' 飞机 ', ' 公共汽车 ', ' 火车 ', ' 卡车 ', ' 小船 ', ' 交通灯 ', ' 消防栓 ', ' 停止标志 ', ' 里程表 ', ' 长凳 ',
                      ' 鸟 ', ' 猫 ', ' 狗狗 ', ' 马 ', ' 绵羊 ', ' 母牛 ', ' 大象 ', ' 熊 ', ' 斑马 ', ' 长颈鹿 ', '背包 ', ' 雨伞 ', ' 手提包 ', ' 领带 ', ' 手提箱 ', ' 飞盘 ', ' 滑雪板 ',
                      ' 滑雪板 ', ' 体育球 ', ' 风筝 ', '棒球棒 ', ' 棒球手套 ', ' 滑板 ', ' 冲浪板 ', ' 网球拍 ', ' 瓶子 ', ' 酒杯 ', ' 杯子 ', ' 叉子 ', ' 刀 ', ' 勺子 ', ' 碗 ', '香蕉 ',
-                     ' 苹果 ', ' 三明治 ', ' 橘子 ', ' 花椰菜 ', ' 胡萝卜 ', ' 热狗 ', ' 比萨饼 ', ' 甜甜圈 ', ' 蛋糕 ', ' 椅子 ', ' 沙发 ', ' 盆栽植物 ', ' 床 ', ' 餐桌 ', ' 洗手间 ',
-                     ' 电视 ', ' 笔记本 ', ' 鼠标 ', ' 遥控器 ', ' 键盘 ', ' 手机 ', ' 微波炉 ', ' 烤箱 ', '烤面包机 ', '水槽 ', ' 冰箱 ', ' 书 ', ' 时钟 ', ' 花瓶 ', ' 剪刀 ', ' 泰迪熊 ',
+                     ' 苹果 ', ' 三明治 ', ' 橘子 ', ' 花椰菜 ', ' 胡萝卜 ', ' 热狗 ', ' 比萨饼 ', ' 甜甜圈 ', ' 蛋糕 ', ' 椅子 ', ' 沙发 ', ' 盆栽植物 ', ' 床 ', ' 桌子 ', ' 洗手间 ',
+                     ' 屏幕 ', ' 笔记本 ', ' 鼠标 ', ' 遥控器 ', ' 键盘 ', ' 手机 ', ' 微波炉 ', ' 烤箱 ', '烤面包机 ', '水槽 ', ' 冰箱 ', ' 书 ', ' 时钟 ', ' 花瓶 ', ' 剪刀 ', ' 泰迪熊 ',
                      ' 电吹风 ', ' 牙刷 ']
 
 
         # Label
+        text_size = 25
         if not captions:
             class_id = class_ids[i]
             score = scores[i] if scores is not None else None
             label = class_names[class_id]
             x = random.randint(x1, (x1 + x2) // 2)
             caption = "{} {:.2f}".format(label, score) if score else label
+            caption = "{}".format(label) if score else label
         else:
             caption = captions[i]
-        ax.text(x1, y1 + 8, caption,
-                color='w', size=30, backgroundcolor='None')
-        width = 30
-        length = 30*len(caption)
-        if y1+8-35 < 0:
-            y1 = 35
-            width = 5
-            length = length/2
-        # print('--------------', length, '---------------------', width, '----------------', (x1, y1+8-35), '-------------------' + caption + '--------------------')
-        text_bg = patches.Rectangle((x1, y1+8-35), length, width+10, linewidth=2, edgecolor='None', facecolor=color, alpha=0.45)
-        ax.add_patch(text_bg)
+        ax.text(x1, y1 + 16, caption,
+                color="#0055fe",fontsize=text_size, backgroundcolor='None', bbox=dict(facecolor="#fff100", alpha=0.4, edgecolor="#fff100"))
+
 
 
         # Mask
@@ -210,16 +228,10 @@ def display_instances(image, boxes, masks, class_ids, class_names,
 
 
 
-    # # -----------------------------------------------------personal add
-    # if save_path:
-    #     from skimage import io
-    #     io.imsave(save_path, masked_image)
+    ax.imshow(masked_image.astype(np.uint8), interpolation='nearest')
 
-
-
-    ax.imshow(masked_image.astype(np.uint8))
     if save_path:
-        plt.savefig(save_path)
+        plt.savefig(save_path, dpi=dpi, transparent=True)
 
     if auto_show:
 
